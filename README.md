@@ -1,14 +1,12 @@
-This repo is a work in progress.
-Project started: 2025.01.18
-Last update: 2025.01.20
-
 # basic-coco-object-detection
+
+- This repo is a work in progress.
+- Project started: 2025.01.18
+- Last update: 2025.01.20
 
 Run a basic network to perform object detection on COCO dataset. Will be used for benchmarking of private projects.
 
-Code and structure are taken from this webpage ([link](https://armanasq.github.io/computer-vision/image-segementation-coco/)), except for the python environment, which is built with poetry.
-
-All commands are intended to be run from root project folder unless explicitly stated.
+Code and structure are taken from this webpage ([link](https://armanasq.github.io/computer-vision/image-segementation-coco/)), except for the python environment, which is built with poetry. All commands are intended to be run from root project folder unless explicitly stated.
 
 ## Install dependencies
 
@@ -62,7 +60,7 @@ The instances files contains, for each image, the bounding box, the segmentation
 
 ### Person keypoints
 
-The person keypoints files contains, for each image
+The person keypoints files contains, for each image, the bounding box and segmentation mask associated, for category id 1 (humans).
 
 ## Data preparation
 
