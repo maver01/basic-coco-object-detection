@@ -35,7 +35,11 @@ Dataset location in the scripts of project is in `/home/maver02/Development/Data
 ├── val2017
 ```
 
-Full documentation on the dataset is available [here](https://machinelearningspace.com/coco-dataset-a-step-by-step-guide-to-loading-and-visualizing/).
+Full documentation on the dataset is available [here](https://machinelearningspace.com/coco-dataset-a-step-by-step-guide-to-loading-and-visualizing/). The relevant data schema is presented here:
+
+![iamge](./docs/imgs/data_schema_1.jpg)
+
+High level overview of the sections is described in the next sections.
 
 ### Images
 
@@ -59,6 +63,10 @@ The instances files contains, for each image, the bounding box, the segmentation
     <img src="./docs/imgs/instances_val2017_segmentations.jpg" alt="Segmentations" style="width: 45%;">
     <img src="./docs/imgs/instances_val2017_categories.jpg" alt="Categories" style="margin-right: 10px; width: 45%;">
 </div>
+
+The images can be processed to obtain the following results:
+
+![image](./docs/imgs/data_parser_1.jpg)
 
 ### Person keypoints
 
