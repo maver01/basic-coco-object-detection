@@ -35,6 +35,8 @@ Dataset location in the scripts of project is in `/home/maver02/Development/Data
 ├── val2017
 ```
 
+Full documentation on the dataset is available [here](https://machinelearningspace.com/coco-dataset-a-step-by-step-guide-to-loading-and-visualizing/).
+
 ### Images
 
 The train and val folders contain the images, in jpg format. Here are some examples:
