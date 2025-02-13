@@ -18,7 +18,7 @@ train_annotations_file = os.path.join(annotations_dir, 'instances_train2017.json
 val_annotations_file = os.path.join(annotations_dir, 'instances_val2017.json')
 
 # Create directories for preprocessed images and masks
-preprocessed_dir = os.path.join(data_dir, 'preprocessed')
+preprocessed_dir = os.path.join(data_dir, 'preprocessed_v2')
 os.makedirs(os.path.join(preprocessed_dir, 'train', 'images'), exist_ok=True)
 os.makedirs(os.path.join(preprocessed_dir, 'train', 'masks'), exist_ok=True)
 os.makedirs(os.path.join(preprocessed_dir, 'val', 'images'), exist_ok=True)
@@ -41,17 +41,28 @@ def preprocess_image(img_info, coco, data_dir, output_dir):
     """
     image_path = os.path.join(data_dir, img_info['file_name'])
     ann_ids = coco.getAnnIds(imgIds=img_info['id'], iscrowd=None)
-    if len(ann_ids) == 0:
+    anns = coco.loadAnns(ann_ids)
+
+    if not anns:
         return
 
-    mask = coco.annToMask(coco.loadAnns(ann_ids)[0])
+    # only handle one annotation per image
+    # mask = coco.annToMask(coco.loadAnns(ann_ids)[0])
+    # Save the corresponding mask
+    # cv2.imwrite(os.path.join(output_dir, 'masks', img_info['file_name'].replace('.jpg', '.png')), mask)
 
     # Save the preprocessed image
     image = cv2.imread(image_path)
     cv2.imwrite(os.path.join(output_dir, 'images', img_info['file_name']), image)
 
-    # Save the corresponding mask
-    cv2.imwrite(os.path.join(output_dir, 'masks', img_info['file_name'].replace('.jpg', '.png')), mask)
+    # Generate a separate mask for each annotation
+    for idx, ann in enumerate(anns):
+        mask = coco.annToMask(ann) * 255  # Convert to 0-255 range
+        mask_filename = img_info['file_name'].replace('.jpg', f'_{idx}.jpg')
+
+        # Save the individual mask
+        cv2.imwrite(os.path.join(output_dir, 'masks', mask_filename), mask)
+        
 
 def preprocess_dataset(data_dir, annotations_file, output_dir):
     """
@@ -93,8 +104,8 @@ def preprocess_dataset(data_dir, annotations_file, output_dir):
 
     progress_bar.close()  # Close the progress bar once finished
 
-# Preprocess the training set
-preprocess_dataset(train_dir, train_annotations_file, os.path.join(preprocessed_dir, 'train'))
-
 # Preprocess the validation set (if required)
 preprocess_dataset(val_dir, val_annotations_file, os.path.join(preprocessed_dir, 'val'))
+
+# Preprocess the training set
+# preprocess_dataset(train_dir, train_annotations_file, os.path.join(preprocessed_dir, 'train'))
