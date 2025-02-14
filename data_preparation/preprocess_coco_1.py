@@ -18,7 +18,7 @@ train_annotations_file = os.path.join(annotations_dir, 'instances_train2017.json
 val_annotations_file = os.path.join(annotations_dir, 'instances_val2017.json')
 
 # Create directories for preprocessed images and masks
-preprocessed_dir = os.path.join(data_dir, 'preprocessed_v2')
+preprocessed_dir = os.path.join(data_dir, 'preprocess_coco_2_v1')
 os.makedirs(os.path.join(preprocessed_dir, 'train', 'images'), exist_ok=True)
 os.makedirs(os.path.join(preprocessed_dir, 'train', 'masks'), exist_ok=True)
 os.makedirs(os.path.join(preprocessed_dir, 'val', 'images'), exist_ok=True)
