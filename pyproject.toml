@@ -16,6 +16,7 @@ torch = "^2.6.0"
 pandas = "^2.2.3"
 numpy = "^2.2.2"
 torchvision = "^0.21.0"
+pyqt5 = "^5.15.11"
 
 
 [build-system]
