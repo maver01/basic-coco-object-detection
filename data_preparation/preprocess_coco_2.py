@@ -57,11 +57,12 @@ def preprocess_image(img_info, coco, data_dir, output_dir):
         mask[ann_mask > 0] = category_id  # Assign category ID to corresponding pixels
     
     # Save the preprocessed image
-    cv2.imwrite(os.path.join(output_dir, 'images', img_info['file_name']), image)
+    filename_png = os.path.splitext(img_info['file_name'])[0] + ".png"
+    cv2.imwrite(os.path.join(output_dir, 'images', filename_png), image)
     
-    # Save the single mask
-    mask_filename = img_info['file_name']
-    cv2.imwrite(os.path.join(output_dir, 'masks', mask_filename), mask)
+    # Ensure the filename has a .png extension (jpg would mistakenly use wrong pixels)
+    
+    cv2.imwrite(os.path.join(output_dir, 'masks', filename_png), mask)
     
 
 def preprocess_dataset(data_dir, annotations_file, output_dir):
