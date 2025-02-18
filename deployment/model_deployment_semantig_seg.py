@@ -3,16 +3,17 @@ import cv2
 import numpy as np
 from torchvision.transforms import v2
 from models.unet_parts import *
+from models.simple_cnn import *
 
 
-model_path = "/home/maver02/Development/Models/COCO/instance_segmentation/unet_model_1.pth"
+model_path = "/home/maver02/Development/Models/COCO/instance_segmentation/simple_cnn_model_2.pth"
 image_path = "/home/maver02/Development/Datasets/COCO/preprocess_coco_2_v1/val/images/000000000139.png"
 mask_path = "/home/maver02/Development/Datasets/COCO/preprocess_coco_2_v1/val/masks/000000000139.png"
 
 
 # Load the trained model
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = UNet(n_channels=3, n_classes=91).to(device) # initialize the model
+model = SimpleCNNModel(n_classes=91).to(device) # initialize the model
 model.load_state_dict(torch.load(model_path, weights_only=True))
 model.eval()
 
@@ -33,6 +34,8 @@ image_tensor = transform_image(image_tensor).to(device)
 # Run inference
 with torch.no_grad():
     output = model(image_tensor.unsqueeze(0))
+
+print(output.shape)
 
 # Get the predicted segmentation mask
 pred_mask = output.argmax(dim=1).squeeze().cpu().numpy() # Convert to NumPy array

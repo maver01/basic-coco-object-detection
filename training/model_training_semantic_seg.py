@@ -10,6 +10,7 @@ import torch.optim as optim
 from torchvision.transforms import v2
 
 from models.unet_parts import *
+from models.simple_cnn import *
 
 # Logging setup
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -43,7 +44,7 @@ class COCOSegmentationDataset(Dataset):
 
         # Convert to tensor (float16)
         image_tensor = torch.tensor(image, dtype=torch.float32).permute(2, 0, 1)  # Channels first
-        mask_tensor = torch.tensor(mask, dtype=torch.long)  # Ensure integer mask for loss function
+        mask_tensor = torch.tensor(mask, dtype=torch.float32)  # Ensure integer mask for loss function
         
         if self.transform_image:
             image_tensor = self.transform_image(image_tensor)
@@ -77,19 +78,16 @@ train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 val_dataloader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
 
 # UNet Model
-model = UNet(n_channels=3, n_classes=91).to(device)
-
-logging.info(f"Network:\n"
-             f"\t{model.n_channels} input channels\n"
-             f"\t{model.n_classes} output channels (classes)\n"
-             f"\t{'Bilinear' if model.bilinear else 'Transposed conv'} upscaling")
+# model = UNet(n_channels=3, n_classes=91).to(device)
+# Simple CNN Model
+model = SimpleCNNModel(n_classes=91).to(device)
 
 # Loss & Optimizer
-loss_fn = nn.CrossEntropyLoss()  # Handles integer masks
+criterion = torch.nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
 # Training function
-def train(dataloader, model, loss_fn, optimizer):
+def train(dataloader, model, criterion, optimizer):
     model.train()
     total_loss = 0
 
@@ -97,13 +95,8 @@ def train(dataloader, model, loss_fn, optimizer):
         X, y = X.to(device), y.to(device)
 
         # Forward pass
-        pred = model(X)
-        loss = loss_fn(pred, y)
-
-        # Backward pass
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+        pred = model(X)  # Output shape: (B, 91, H, W)
+        loss = criterion(pred, y)
 
         total_loss += loss.item()
         if batch % 10 == 0:
@@ -111,8 +104,9 @@ def train(dataloader, model, loss_fn, optimizer):
 
     return total_loss / len(dataloader)
 
+
 # Validation function
-def validate(dataloader, model, loss_fn):
+def validate(dataloader, model, criterion):
     model.eval()
     total_loss = 0
     correct_pixels = 0
@@ -120,14 +114,13 @@ def validate(dataloader, model, loss_fn):
 
     with torch.no_grad():
         for X, y in dataloader:
-            X, y = X.to(device), y.to(device)
-            pred = model(X)
+            X, y = X.to(device), y.to(device)  # Ensure y is long
 
-            loss = loss_fn(pred, y)
+            pred = model(X)  # Output shape: (B, 91, H, W)
+            loss = criterion(pred, y)
             total_loss += loss.item()
 
-            pred_classes = pred.argmax(1)  # Get class with highest probability
-            correct_pixels += (pred_classes == y).sum().item()
+            correct_pixels += (pred == y).sum().item()
             total_pixels += y.numel()
 
     accuracy = correct_pixels / total_pixels
@@ -136,14 +129,16 @@ def validate(dataloader, model, loss_fn):
     logging.info(f"Validation - Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4%}")
     return avg_loss, accuracy
 
+
 # Training loop
 epochs = 3
 for epoch in range(epochs):
     logging.info(f"Epoch {epoch + 1}/{epochs}")
-    train_loss = train(train_dataloader, model, loss_fn, optimizer)
-    val_loss, val_acc = validate(val_dataloader, model, loss_fn)
+    train_loss = train(train_dataloader, model, criterion, optimizer)
+    val_loss, val_acc = validate(val_dataloader, model, criterion)
 
 # Save the model
-model_path = "/home/maver02/Development/Models/COCO/instance_segmentation/unet_model_1.pth"
+model_path = "/home/maver02/Development/Models/COCO/instance_segmentation/unet_model_2.pth"
+model_path = "/home/maver02/Development/Models/COCO/instance_segmentation/simple_cnn_model_2.pth"
 torch.save(model.state_dict(), model_path)
 logging.info(f"Model saved to {model_path}")
