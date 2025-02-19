@@ -28,8 +28,8 @@ class COCOSegmentationDataset(Dataset):
         self.mask_dir = mask_dir
         self.transform_image = transform_image
         self.transform_mask = transform_mask
-        self.image_files = sorted([f for f in os.listdir(image_dir) if f.endswith(".png")])[:100]  # Limit to 100 images
-        self.mask_files = sorted([f for f in os.listdir(mask_dir) if f.endswith(".png")])[:100]
+        self.image_files = sorted([f for f in os.listdir(image_dir) if f.endswith(".png")])[:10]  # Limit to 100 images
+        self.mask_files = sorted([f for f in os.listdir(mask_dir) if f.endswith(".png")])[:10]
 
     def __len__(self):
         return len(self.image_files)
@@ -44,7 +44,7 @@ class COCOSegmentationDataset(Dataset):
 
         # Convert to tensor (float16)
         image_tensor = torch.tensor(image, dtype=torch.float32).permute(2, 0, 1)  # Channels first
-        mask_tensor = torch.tensor(mask, dtype=torch.float32)  # Ensure integer mask for loss function
+        mask_tensor = torch.tensor(mask, dtype=torch.long)  # Ensure integer mask for loss function
         
         if self.transform_image:
             image_tensor = self.transform_image(image_tensor)
@@ -63,28 +63,28 @@ mask_val_dir = "/home/maver02/Development/Datasets/COCO/preprocess_coco_2_v1/val
 
 # Perform transformations
 transform_image = v2.Compose([
-    v2.Resize((300, 300), antialias=True) # resize images
+    v2.Resize((200, 200), antialias=True) # resize images
     ])
 transform_mask = v2.Compose([
-    v2.Resize((300, 300), antialias=True) # resize masks
+    v2.Resize((200, 200), antialias=True) # resize masks
     ])
 
 train_data = COCOSegmentationDataset(image_train_dir, mask_train_dir, transform_image=transform_image, transform_mask=transform_mask)
 val_data = COCOSegmentationDataset(image_val_dir, mask_val_dir, transform_image=transform_image, transform_mask=transform_mask)
 
 
-batch_size = 2
+batch_size = 10
 train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 val_dataloader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
 
-# UNet Model
-# model = UNet(n_channels=3, n_classes=91).to(device)
 # Simple CNN Model
-model = SimpleCNNModel(n_classes=91).to(device)
+# model = SimpleCNNModel(n_classes=91).to(device)
+# UNet Model
+model = UNet(n_channels=3, n_classes=91).to(device)
 
 # Loss & Optimizer
 criterion = torch.nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=1e-3)
+optimizer = optim.Adam(model.parameters(), lr=1e-5)
 
 # Training function
 def train(dataloader, model, criterion, optimizer):
@@ -99,8 +99,8 @@ def train(dataloader, model, criterion, optimizer):
         loss = criterion(pred, y)
 
         total_loss += loss.item()
-        if batch % 10 == 0:
-            logging.info(f"Batch {batch}/{len(dataloader)} - Loss: {loss.item():.4f}")
+        #if batch % 100 == 0:
+        #    logging.info(f"Batch {batch}/{len(dataloader)} - Loss: {loss.item():.4f}")
 
     return total_loss / len(dataloader)
 
@@ -119,7 +119,8 @@ def validate(dataloader, model, criterion):
             pred = model(X)  # Output shape: (B, 91, H, W)
             loss = criterion(pred, y)
             total_loss += loss.item()
-
+            
+            pred = torch.argmax(pred, dim=1) # turn to 2 dim
             correct_pixels += (pred == y).sum().item()
             total_pixels += y.numel()
 
@@ -131,14 +132,14 @@ def validate(dataloader, model, criterion):
 
 
 # Training loop
-epochs = 3
+epochs = 150
 for epoch in range(epochs):
     logging.info(f"Epoch {epoch + 1}/{epochs}")
     train_loss = train(train_dataloader, model, criterion, optimizer)
     val_loss, val_acc = validate(val_dataloader, model, criterion)
 
 # Save the model
-model_path = "/home/maver02/Development/Models/COCO/instance_segmentation/unet_model_2.pth"
-model_path = "/home/maver02/Development/Models/COCO/instance_segmentation/simple_cnn_model_2.pth"
+model_path = "/home/maver02/Development/Models/COCO/instance_segmentation/unet_model_3.pth"
+# model_path = "/home/maver02/Development/Models/COCO/instance_segmentation/simple_cnn_model_2.pth"
 torch.save(model.state_dict(), model_path)
 logging.info(f"Model saved to {model_path}")
