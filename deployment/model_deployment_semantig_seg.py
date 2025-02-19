@@ -6,14 +6,18 @@ from models.unet_parts import *
 from models.simple_cnn import *
 
 
-model_path = "/home/maver02/Development/Models/COCO/instance_segmentation/simple_cnn_model_2.pth"
+# model_path = "/home/maver02/Development/Models/COCO/instance_segmentation/simple_cnn_model_2.pth"
+model_path = "/home/maver02/Development/Models/COCO/instance_segmentation/unet_model_3.pth"
 image_path = "/home/maver02/Development/Datasets/COCO/preprocess_coco_2_v1/val/images/000000000139.png"
 mask_path = "/home/maver02/Development/Datasets/COCO/preprocess_coco_2_v1/val/masks/000000000139.png"
 
 
 # Load the trained model
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = SimpleCNNModel(n_classes=91).to(device) # initialize the model
+
+# model = SimpleCNNModel(n_classes=91).to(device) # initialize the model
+model = UNet(n_channels=3, n_classes=91).to(device)
+
 model.load_state_dict(torch.load(model_path, weights_only=True))
 model.eval()
 
@@ -26,7 +30,7 @@ image_tensor = torch.tensor(image, dtype=torch.float32).permute(2, 0, 1)
 
 # Perform transformations
 transform_image = v2.Compose([
-    v2.Resize((300, 300), antialias=True) # resize images
+    v2.Resize((200, 200), antialias=True) # resize images
     ])
 
 image_tensor = transform_image(image_tensor).to(device)
